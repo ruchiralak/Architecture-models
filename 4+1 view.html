@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Ticketing System - 4+1 View Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        /* Tab Navigation Styles */
+        .tab-container {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0;
+        }
+        
+        .tab-navigation {
+            display: flex;
+            border-bottom: 2px solid #e1e8ed;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+        
+        .tab-button:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+        
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            min-height: 600px;
+        }
+        
+        .view-content {
+            display: none;
+        }
+        
+        .view-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .view-title {
+            color: #34495e;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .diagram-container {
+            background: #fafbfc;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .component {
+            background: #3498db;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px;
+            display: inline-block;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .database {
+            background: #e74c3c;
+        }
+        
+        .service {
+            background: #2ecc71;
+        }
+        
+        .interface {
+            background: #f39c12;
+        }
+        
+        .external {
+            background: #9b59b6;
+        }
+        
+        .flow-arrow {
+            color: #34495e;
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+        
+        .process-flow {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .layer {
+            border: 2px solid #bdc3c7;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #ecf0f1;
+        }
+        
+        .layer-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .deployment-node {
+            border: 2px solid #27ae60;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            background: #d5f4e6;
+            display: inline-block;
+            vertical-align: top;
+            min-width: 200px;
+        }
+        
+        .node-title {
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .use-case {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .actor {
+            background: #e8f4fd;
+            color: #2980b9;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 5px;
+            font-weight: 500;
+        }
+        
+        .description {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #555;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                border-bottom: none;
+                border-right: 3px solid transparent;
+                text-align: left;
+            }
+            
+            .tab-button.active {
+                border-bottom: none;
+                border-right-color: #3498db;
+            }
+            
+            .process-flow {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .component {
+                display: block;
+                margin: 5px 0;
+            }
+            
+            .deployment-node {
+                display: block;
+                margin: 10px 0;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+        
+        /* Tab navigation scrollbar styling */
+        .tab-navigation::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .tab-navigation::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .tab-navigation::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+        
+        .tab-navigation::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚆 Railway Ticketing System<br>4+1 View Architecture</h1>
+        
+        <div class="tab-container">
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="showTab('use-case')">📋 Use Case View</button>
+                <button class="tab-button" onclick="showTab('logical')">🧠 Logical View</button>
+                <button class="tab-button" onclick="showTab('process')">⚙️ Process View</button>
+                <button class="tab-button" onclick="showTab('development')">🛠️ Development View</button>
+                <button class="tab-button" onclick="showTab('physical')">🏗️ Physical View</button>
+                <button class="tab-button" onclick="showTab('implementation')">🚀 Implementation</button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- Use Case View -->
+                <div id="use-case" class="view-content active">
+                    <h2 class="view-title">📋 Use Case View (Scenarios)</h2>
+                    <div class="description">
+                        <strong>Purpose:</strong> Describes the system's functionality as seen by end-users, analysts, and testers.
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>🎭 Primary Actors</h3>
+                        <div class="actor">Passenger</div>
+                        <div class="actor">Railway Officer</div>
+                        <div class="actor">Station Kiosk</div>
+                        <div class="actor">System Administrator</div>
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>🎯 Key Use Cases</h3>
+                        <strong>UC1: Account Management</strong>
+                        <ul>
+                            <li>Create account with profile information</li>
+                            <li>Generate unique user ID with QR code</li>
+                            <li>Update profile information</li>
+                            <li>View purchase history</li>
+                        </ul>
+                        
+                        <strong>UC2: Ticket Purchase</strong>
+                        <ul>
+                            <li>Browse available routes and schedules</li>
+                            <li>Select ticket type (one-time, weekly, monthly)</li>
+                            <li>Process payment</li>
+                            <li>Generate digital ticket with QR code</li>
+                        </ul>
+                        
+                        <strong>UC3: Ticket Verification</strong>
+                        <ul>
+                            <li>Scan QR code using smart device</li>
+                            <li>Validate ticket authenticity</li>
+                            <li>Check ticket validity (time, route, usage)</li>
+                            <li>Record verification event</li>
+                        </ul>
+                        
+                        <strong>UC4: Station Kiosk Operations</strong>
+                        <ul>
+                            <li>Purchase tickets at station</li>
+                            <li>Top-up existing passes</li>
+                            <li>Print physical tickets if needed</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <h3>📊 Use Case Diagram</h3>
+                        <svg viewBox="0 0 1200 800" style="width: 100%; height: auto; min-height: 500px;">
+                            <!-- System Boundary -->
+                            <rect x="300" y="50" width="600" height="700" fill="none" stroke="#2c3e50" stroke-width="3" stroke-dasharray="10,5"/>
+                            <text x="600" y="40" text-anchor="middle" font-size="18" font-weight="bold" fill="#2c3e50">Railway Ticketing System</text>
+                            
+                            <!-- External Actors -->
+                            <!-- Passenger -->
+                            <g id="passenger">
+                                <ellipse cx="150" cy="200" rx="35" ry="20" fill="#3498db"/>
+                                <circle cx="150" cy="170" r="15" fill="#3498db"/>
+                                <line x1="150" y1="185" x2="150" y2="220" stroke="#3498db" stroke-width="3"/>
+                                <line x1="130" y1="195" x2="170" y2="195" stroke="#3498db" stroke-width="3"/>
+                                <line x1="150" y1="220" x2="135" y2="240" stroke="#3498db" stroke-width="3"/>
+                                <line x1="150" y1="220" x2="165" y2="240" stroke="#3498db" stroke-width="3"/>
+                                <text x="150" y="260" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Passenger</text>
+                            </g>
+                            
+                            <!-- Railway Officer -->
+                            <g id="officer">
+                                <ellipse cx="150" cy="450" rx="35" ry="20" fill="#e74c3c"/>
+                                <circle cx="150" cy="420" r="15" fill="#e74c3c"/>
+                                <line x1="150" y1="435" x2="150" y2="470" stroke="#e74c3c" stroke-width="3"/>
+                                <line x1="130" y1="445" x2="170" y2="445" stroke="#e74c3c" stroke-width="3"/>
+                                <line x1="150" y1="470" x2="135" y2="490" stroke="#e74c3c" stroke-width="3"/>
+                                <line x1="150" y1="470" x2="165" y2="490" stroke="#e74c3c" stroke-width="3"/>
+                                <text x="150" y="510" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Railway Officer</text>
+                            </g>
+                            
+                            <!-- System Administrator -->
+                            <g id="admin">
+                                <ellipse cx="1050" cy="200" rx="35" ry="20" fill="#9b59b6"/>
+                                <circle cx="1050" cy="170" r="15" fill="#9b59b6"/>
+                                <line x1="1050" y1="185" x2="1050" y2="220" stroke="#9b59b6" stroke-width="3"/>
+                                <line x1="1030" y1="195" x2="1070" y2="195" stroke="#9b59b6" stroke-width="3"/>
+                                <line x1="1050" y1="220" x2="1035" y2="240" stroke="#9b59b6" stroke-width="3"/>
+                                <line x1="1050" y1="220" x2="1065" y2="240" stroke="#9b59b6" stroke-width="3"/>
+                                <text x="1050" y="260" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">System Admin</text>
+                            </g>
+                            
+                            <!-- Station Kiosk -->
+                            <g id="kiosk">
+                                <rect x="1020" y="430" width="60" height="40" fill="#f39c12" stroke="#2c3e50" stroke-width="2"/>
+                                <rect x="1025" y="435" width="50" height="25" fill="#fff"/>
+                                <circle cx="1050" cy="447" r="3" fill="#2c3e50"/>
+                                <text x="1050" y="490" text-anchor="middle" font-size="14" font-weight="bold" fill="#2c3e50">Station Kiosk</text>
+                            </g>
+                            
+                            <!-- Use Cases (Ellipses) -->
+                            <!-- Account Management -->
+                            <ellipse cx="450" cy="150" rx="80" ry="30" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="450" y="150" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Create Account</text>
+                            <text x="450" y="165" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">& Profile</text>
+                            
+                            <!-- Browse Routes -->
+                            <ellipse cx="600" cy="150" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="600" y="150" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Browse Routes</text>
+                            <text x="600" y="165" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">& Schedules</text>
+                            
+                            <!-- Purchase Tickets -->
+                            <ellipse cx="500" cy="250" rx="80" ry="30" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="500" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Purchase Tickets</text>
+                            <text x="500" y="265" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">(Online/Kiosk)</text>
+                            
+                            <!-- Generate QR Code -->
+                            <ellipse cx="750" cy="250" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="750" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Generate</text>
+                            <text x="750" y="265" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">QR Code</text>
+                            
+                            <!-- Verify Tickets -->
+                            <ellipse cx="450" cy="350" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="450" y="350" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Verify Tickets</text>
+                            <text x="450" y="365" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">(Scan QR)</text>
+                            
+                            <!-- View Purchase History -->
+                            <ellipse cx="650" cy="350" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="650" y="350" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">View Purchase</text>
+                            <text x="650" y="365" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">History</text>
+                            
+                            <!-- Process Payment -->
+                            <ellipse cx="550" cy="450" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="550" y="450" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Process</text>
+                            <text x="550" y="465" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Payment</text>
+                            
+                            <!-- System Management -->
+                            <ellipse cx="750" cy="150" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="750" y="150" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">System</text>
+                            <text x="750" y="165" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Management</text>
+                            
+                            <!-- Device Management -->
+                            <ellipse cx="750" cy="450" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="750" y="450" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Device</text>
+                            <text x="750" y="465" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Management</text>
+                            
+                            <!-- Top-up Passes -->
+                            <ellipse cx="650" cy="550" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="650" y="550" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Top-up</text>
+                            <text x="650" y="565" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Passes</text>
+                            
+                            <!-- Audit & Reports -->
+                            <ellipse cx="450" cy="550" rx="70" ry="25" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/>
+                            <text x="450" y="550" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Audit &</text>
+                            <text x="450" y="565" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c3e50">Reports</text>
+                            
+                            <!-- Relationships (Lines) -->
+                            <!-- Passenger connections -->
+                            <line x1="185" y1="180" x2="370" y2="150" stroke="#3498db" stroke-width="2"/>
+                            <line x1="185" y1="190" x2="530" y2="150" stroke="#3498db" stroke-width="2"/>
+                            <line x1="185" y1="210" x2="420" y2="250" stroke="#3498db" stroke-width="2"/>
+                            <line x1="185" y1="220" x2="580" y2="350" stroke="#3498db" stroke-width="2"/>
+                            
+                            <!-- Railway Officer connections -->
+                            <line x1="185" y1="440" x2="380" y2="360" stroke="#e74c3c" stroke-width="2"/>
+                            <line x1="185" y1="460" x2="380" y2="540" stroke="#e74c3c" stroke-width="2"/>
+                            
+                            <!-- System Admin connections -->
+                            <line x1="1015" y1="180" x2="820" y2="150" stroke="#9b59b6" stroke-width="2"/>
+                            <line x1="1015" y1="200" x2="820" y2="250" stroke="#9b59b6" stroke-width="2"/>
+                            <line x1="1015" y1="220" x2="520" y2="540" stroke="#9b59b6" stroke-width="2"/>
+                            
+                            <!-- Station Kiosk connections -->
+                            <line x1="1020" y1="450" x2="580" y2="250" stroke="#f39c12" stroke-width="2"/>
+                            <line x1="1020" y1="460" x2="720" y2="550" stroke="#f39c12" stroke-width="2"/>
+                            <line x1="1015" y1="470" x2="820" y2="450" stroke="#f39c12" stroke-width="2"/>
+                            
+                            <!-- Include relationships (dashed lines) -->
+                            <line x1="580" y1="250" x2="680" y2="250" stroke="#2c3e50" stroke-width="1" stroke-dasharray="5,5"/>
+                            <text x="630" y="240" text-anchor="middle" font-size="10" fill="#2c3e50">«include»</text>
+                            
+                            <line x1="500" y1="280" x2="530" y2="420" stroke="#2c3e50" stroke-width="1" stroke-dasharray="5,5"/>
+                            <text x="540" y="350" text-anchor="middle" font-size="10" fill="#2c3e50" transform="rotate(-70 540 350)">«include»</text>
+                            
+                            <!-- Legend -->
+                            <g transform="translate(320, 650)">
+                                <rect x="0" y="0" width="560" height="80" fill="#f8f9fa" stroke="#bdc3c7" stroke-width="1" rx="5"/>
+                                <text x="10" y="20" font-size="14" font-weight="bold" fill="#2c3e50">Legend:</text>
+                                
+                                <!-- Actor symbols -->
+                                <circle cx="40" cy="40" r="8" fill="#3498db"/>
+                                <text x="60" y="45" font-size="12" fill="#2c3e50">Actor</text>
+                                
+                                <!-- Use Case symbol -->
+                                <ellipse cx="140" cy="40" rx="25" ry="10" fill="#ecf0f1" stroke="#2c3e50" stroke-width="1"/>
+                                <text x="180" y="45" font-size="12" fill="#2c3e50">Use Case</text>
+                                
+                                <!-- Association line -->
+                                <line x1="250" y1="40" x2="290" y2="40" stroke="#2c3e50" stroke-width="2"/>
+                                <text x="310" y="45" font-size="12" fill="#2c3e50">Association</text>
+                                
+                                <!-- Include line -->
+                                <line x1="420" y1="40" x2="460" y2="40" stroke="#2c3e50" stroke-width="1" stroke-dasharray="3,3"/>
+                                <text x="480" y="45" font-size="12" fill="#2c3e50">«include»</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Logical View -->
+                <div id="logical" class="view-content">
+                    <h2 class="view-title">🧠 Logical View</h2>
+                    <div class="description">
+                        <strong>Purpose:</strong> Shows the key abstractions in the system as objects or object classes.
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">📱 Presentation Layer</div>
+                        <div class="component interface">Mobile App UI</div>
+                        <div class="component interface">Web Portal UI</div>
+                        <div class="component interface">Kiosk Interface</div>
+                        <div class="component interface">Officer App UI</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">🔧 Business Logic Layer</div>
+                        <div class="component service">User Management Service</div>
+                        <div class="component service">Ticket Service</div>
+                        <div class="component service">Payment Service</div>
+                        <div class="component service">QR Code Service</div>
+                        <div class="component service">Validation Service</div>
+                        <div class="component service">Route Management Service</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">🔌 Integration Layer</div>
+                        <div class="component external">Payment Gateway API</div>
+                        <div class="component external">SMS/Email Service</div>
+                        <div class="component external">Railway Schedule API</div>
+                        <div class="component external">Device Management API</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">💾 Data Layer</div>
+                        <div class="component database">User Database</div>
+                        <div class="component database">Ticket Database</div>
+                        <div class="component database">Transaction Database</div>
+                        <div class="component database">Audit Database</div>
+                    </div>
+                </div>
+
+                <!-- Process View -->
+                <div id="process" class="view-content">
+                    <h2 class="view-title">⚙️ Process View</h2>
+                    <div class="description">
+                        <strong>Purpose:</strong> Shows the dynamic behavior of the system, including processes, threads, and interactions.
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <h3>🎫 Ticket Purchase Process Flow</h3>
+                        <div class="process-flow">
+                            <div class="component interface">User Request</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">Authentication</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">Route Validation</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component external">Payment Gateway</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">QR Generation</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component database">Ticket Storage</div>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <h3>✅ Ticket Verification Process Flow</h3>
+                        <div class="process-flow">
+                            <div class="component interface">QR Scan</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">QR Decode</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component database">Ticket Lookup</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">Validity Check</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component database">Audit Log</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component interface">Response</div>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <h3>👤 User Registration Process Flow</h3>
+                        <div class="process-flow">
+                            <div class="component interface">Registration Form</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">Data Validation</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">Unique ID Generation</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component service">QR Code Creation</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component database">User Storage</div>
+                            <span class="flow-arrow">→</span>
+                            <div class="component external">Welcome Email</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Development View -->
+                <div id="development" class="view-content">
+                    <h2 class="view-title">🛠️ Development View</h2>
+                    <div class="description">
+                        <strong>Purpose:</strong> Shows the system from a programmer's perspective, focusing on software management.
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">📱 Frontend Applications</div>
+                        <div class="component">Mobile App (React Native)</div>
+                        <div class="component">Web Portal (React.js)</div>
+                        <div class="component">Officer App (React Native)</div>
+                        <div class="component">Kiosk App (Electron)</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">🔧 Backend Services</div>
+                        <div class="component">API Gateway (Spring Boot)</div>
+                        <div class="component">User Service (Node.js)</div>
+                        <div class="component">Ticket Service (Java Spring)</div>
+                        <div class="component">Payment Service (Python Flask)</div>
+                        <div class="component">Notification Service (Node.js)</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">📚 Shared Libraries</div>
+                        <div class="component">QR Code Library</div>
+                        <div class="component">Encryption Library</div>
+                        <div class="component">Validation Library</div>
+                        <div class="component">Logging Framework</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">🔌 External Dependencies</div>
+                        <div class="component">Payment SDK</div>
+                        <div class="component">Push Notification SDK</div>
+                        <div class="component">Analytics SDK</div>
+                        <div class="component">Crash Reporting SDK</div>
+                    </div>
+                </div>
+
+                <!-- Physical View -->
+                <div id="physical" class="view-content">
+                    <h2 class="view-title">🏗️ Physical View (Deployment)</h2>
+                    <div class="description">
+                        <strong>Purpose:</strong> Shows the system from a system engineer's perspective, mapping software to hardware.
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="deployment-node">
+                            <div class="node-title">☁️ Cloud Infrastructure (AWS/Azure)</div>
+                            <div class="component">Load Balancer</div>
+                            <div class="component">API Gateway</div>
+                            <div class="component">Auto Scaling Groups</div>
+                            <div class="component">Container Orchestration</div>
+                        </div>
+                        
+                        <div class="deployment-node">
+                            <div class="node-title">🖥️ Application Servers</div>
+                            <div class="component">Web Server Cluster</div>
+                            <div class="component">API Server Cluster</div>
+                            <div class="component">Background Job Processors</div>
+                            <div class="component">Cache Layer (Redis)</div>
+                        </div>
+                        
+                        <div class="deployment-node">
+                            <div class="node-title">💾 Database Servers</div>
+                            <div class="component">Primary Database (PostgreSQL)</div>
+                            <div class="component">Read Replicas</div>
+                            <div class="component">Backup Systems</div>
+                            <div class="component">Data Warehouse</div>
+                        </div>
+                        
+                        <div class="deployment-node">
+                            <div class="node-title">📱 Client Devices</div>
+                            <div class="component">Mobile Devices</div>
+                            <div class="component">Station Kiosks</div>
+                            <div class="component">Officer Tablets</div>
+                            <div class="component">Web Browsers</div>
+                        </div>
+                        
+                        <div class="deployment-node">
+                            <div class="node-title">🔗 External Services</div>
+                            <div class="component">Payment Gateways</div>
+                            <div class="component">SMS/Email Providers</div>
+                            <div class="component">CDN Services</div>
+                            <div class="component">Monitoring Services</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Implementation Strategy -->
+                <div id="implementation" class="view-content">
+                    <h2 class="view-title">🚀 Implementation Strategy</h2>
+                    <div class="description">
+                        <strong>Key Design Decisions and Rationale</strong>
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>🔐 Security Considerations</h3>
+                        <ul>
+                            <li><strong>QR Code Security:</strong> Encrypted QR codes with timestamp and digital signatures</li>
+                            <li><strong>Data Protection:</strong> End-to-end encryption for sensitive user data</li>
+                            <li><strong>Authentication:</strong> Multi-factor authentication for officers and administrators</li>
+                            <li><strong>API Security:</strong> OAuth 2.0 and rate limiting for all API endpoints</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>📈 Scalability Approach</h3>
+                        <ul>
+                            <li><strong>Microservices:</strong> Independent services for different business functions</li>
+                            <li><strong>Database Sharding:</strong> Distribute data across multiple database instances</li>
+                            <li><strong>Caching Strategy:</strong> Redis for session management and frequently accessed data</li>
+                            <li><strong>CDN Integration:</strong> Global content delivery for mobile applications</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>🔄 Integration Points</h3>
+                        <ul>
+                            <li><strong>Payment Integration:</strong> Multiple payment gateways with fallback mechanisms</li>
+                            <li><strong>Railway Systems:</strong> Real-time integration with existing railway scheduling systems</li>
+                            <li><strong>Device Management:</strong> APIs for managing and updating kiosk and officer devices</li>
+                            <li><strong>Third-party Services:</strong> SMS, email, and push notification services</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="use-case">
+                        <h3>🎯 Development Phases</h3>
+                        <ul>
+                            <li><strong>Phase 1:</strong> Core user management and basic ticket purchasing</li>
+                            <li><strong>Phase 2:</strong> QR code generation and verification system</li>
+                            <li><strong>Phase 3:</strong> Station kiosk integration and officer applications</li>
+                            <li><strong>Phase 4:</strong> Advanced features and analytics dashboard</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all tab contents
+            const allContents = document.querySelectorAll('.view-content');
+            allContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            const allButtons = document.querySelectorAll('.tab-button');
+            allButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        // Keyboard navigation for tabs
+        document.addEventListener('keydown', function(event) {
+            if (event.altKey) {
+                const activeTab = document.querySelector('.tab-button.active');
+                const tabs = Array.from(document.querySelectorAll('.tab-button'));
+                const currentIndex = tabs.indexOf(activeTab);
+                
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    const nextIndex = (currentIndex + 1) % tabs.length;
+                    tabs[nextIndex].click();
+                } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                    tabs[prevIndex].click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
